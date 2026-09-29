@@ -1,0 +1,28 @@
+name: Release checks
+
+# Release builds are not made here. Runners have no Developer ID certificate, so
+# they could only produce an ad-hoc signed app: every download would hit a
+# Gatekeeper warning, and keyboard sounds would lose their Input Monitoring
+# permission on every update. Releases are signed, notarized and published
+# locally with ./scripts/release.sh; this workflow checks the tag it pushes.
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  verify:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tag matches the version in Info.plist
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PLIST=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" Resources/Info.plist)
+          echo "tag=$TAG  Info.plist=$PLIST"
+          if [ "$TAG" != "$PLIST" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match CFBundleShortVersionString $PLIST"
+            exit 1
+          fi
+      - name: Test
+        run: swift test
