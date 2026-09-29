@@ -9,18 +9,20 @@ struct SettingsTests {
         #expect(settings.isEnabled)
         #expect(settings.material == .linen)
         #expect(settings.pointerEnabled && settings.scrollEnabled && settings.tapEnabled)
-        #expect(settings.strength == .medium)
+        #expect(settings.strength == .strong)
         #expect(settings.grainScale == 1)
         #expect(!settings.clickSoundEnabled)
         #expect(!settings.keyboardSoundEnabled)
+        #expect(!settings.textureSoundEnabled)
     }
 
     @Test func roundTripsThroughJSON() throws {
         let original = Settings.default
             .updating(\.material, to: .gravel)
-            .updating(\.strength, to: .strong)
+            .updating(\.strength, to: .light)
             .updating(\.volume, to: 0.3)
             .updating(\.keyboardSoundEnabled, to: true)
+            .updating(\.textureSoundEnabled, to: true)
         let data = try JSONEncoder().encode(original)
         let decoded = try JSONDecoder().decode(Settings.self, from: data)
         #expect(decoded == original)
@@ -33,6 +35,13 @@ struct SettingsTests {
         #expect(decoded.volume == 0.2)
         #expect(decoded.tapEnabled == Settings.default.tapEnabled)
         #expect(decoded.soundProfile == Settings.default.soundProfile)
+        #expect(decoded.textureSoundEnabled == Settings.default.textureSoundEnabled)
+    }
+
+    @Test func settingsSavedBeforeADefaultChangedKeepTheirValue() throws {
+        let json = Data(#"{"strength":"medium"}"#.utf8)
+        let decoded = try JSONDecoder().decode(Settings.self, from: json)
+        #expect(decoded.strength == .medium)
     }
 
     @Test func unknownValuesFallBackInsteadOfFailing() throws {

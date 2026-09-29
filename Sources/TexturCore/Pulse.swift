@@ -46,6 +46,13 @@ public struct Pulse: Equatable, Sendable {
     }
 }
 
+extension Array where Element == Pulse {
+    /// The strongest pulse of a grain, or nil when there is nothing to play.
+    public var peakStrength: PulseStrength? {
+        map(\.strength).max()
+    }
+}
+
 /// The user-facing strength setting.
 public enum HapticStrength: String, CaseIterable, Codable, Sendable {
     case subtle

@@ -32,6 +32,15 @@ struct MaterialCatalogTests {
         #expect((preview.last?.delay ?? 0) < 1.0)
     }
 
+    @Test(arguments: MaterialID.allCases)
+    func previewGrainsMakeUpThePreview(id: MaterialID) {
+        let material = MaterialCatalog.material(for: id)
+        let grains = material.previewGrains(strength: .strong)
+        #expect(grains.count == 8)
+        #expect(grains.allSatisfy { !$0.isEmpty })
+        #expect(grains.flatMap { $0 } == material.preview(strength: .strong))
+    }
+
     @Test func tapGrainIsNeverEmptyAndFollowsStrength() {
         let wood = MaterialCatalog.material(for: .wood)
         let subtle = wood.tapGrain(strength: .subtle)

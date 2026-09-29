@@ -78,8 +78,13 @@ public struct Material: Sendable, Equatable, Identifiable {
 
     /// A short phrase of grains that lets someone feel the material right after choosing it.
     public func preview(strength: HapticStrength, grains: Int = 8) -> [Pulse] {
+        previewGrains(strength: strength, grains: grains).flatMap { $0 }
+    }
+
+    /// The same phrase, one entry per grain, so each grain can also be heard once.
+    public func previewGrains(strength: HapticStrength, grains: Int = 8) -> [[Pulse]] {
         let interval = min(max(spacing * 0.03, 0.045), 0.12)
-        return (0..<grains).flatMap { index -> [Pulse] in
+        return (0..<grains).map { index -> [Pulse] in
             let accented = accent.map { $0.every > 0 ? (index + 1) % $0.every == 0 : index == grains / 2 } ?? false
             let source = accented ? (accent?.grain ?? grain) : grain
             return source.map { $0.shifted(by: strength.offset).delayed(by: Double(index) * interval) }

@@ -13,11 +13,12 @@ public struct Settings: Codable, Equatable, Sendable {
     public var pointerEnabled = true
     public var scrollEnabled = true
     public var tapEnabled = true
-    public var strength = HapticStrength.medium
+    public var strength = HapticStrength.strong
     public var grainScale = 1.0
     public var soundProfile = SoundProfileID.fallback
     public var clickSoundEnabled = false
     public var keyboardSoundEnabled = false
+    public var textureSoundEnabled = false
     public var volume = 0.5
 
     public init() {}
@@ -43,7 +44,7 @@ public struct Settings: Codable, Equatable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case isEnabled, material, pointerEnabled, scrollEnabled, tapEnabled, strength, grainScale
-        case soundProfile, clickSoundEnabled, keyboardSoundEnabled, volume
+        case soundProfile, clickSoundEnabled, keyboardSoundEnabled, textureSoundEnabled, volume
     }
 
     public init(from decoder: any Decoder) throws {
@@ -64,6 +65,8 @@ public struct Settings: Codable, Equatable, Sendable {
         decoded.clickSoundEnabled = try container.decodeIfPresent(Bool.self, forKey: .clickSoundEnabled) ?? base.clickSoundEnabled
         decoded.keyboardSoundEnabled = try container.decodeIfPresent(Bool.self, forKey: .keyboardSoundEnabled)
             ?? base.keyboardSoundEnabled
+        decoded.textureSoundEnabled = try container.decodeIfPresent(Bool.self, forKey: .textureSoundEnabled)
+            ?? base.textureSoundEnabled
         decoded.volume = try container.decodeIfPresent(Double.self, forKey: .volume) ?? base.volume
         self = decoded.clamped()
     }

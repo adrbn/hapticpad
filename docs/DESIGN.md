@@ -29,7 +29,8 @@ MultitouchSupport ──frames──▶ CMultitouch (C bridge, dlopen)
                      HapticActuators (serial queue) ─▶ MTActuatorActuate
 
 NSEvent monitor (clicks) ─┐
-CGEventTap (keys) ────────┴▶ SoundPlayer (AVAudioEngine, synthesized buffers)
+CGEventTap (keys) ────────┼▶ SoundPlayer (AVAudioEngine, synthesized buffers)
+grains (texture sound) ───┘
 ```
 
 ### TexturCore (pure Swift, unit tested)
@@ -40,12 +41,14 @@ CGEventTap (keys) ────────┴▶ SoundPlayer (AVAudioEngine, syn
   - A touch-down is reported when a finger lands, with at most two fingers down and at most one every 0.1 s. Haptics are only felt while a finger touches the surface, so a tap is confirmed as the finger lands, not when it lifts.
 - `TextureEngine`: immutable. Buffers sub-0.08 mm movement so sensor noise cancels out, weighs travel by the material's axis weights, crosses randomized gaps, picks the strongest grain when a frame crosses several, and drops grains closer than 10 ms apart.
 - `Material` and `MaterialCatalog`: data only (spacing, jitter, axis weights, grain pulses, accent, skip chance).
-- `SoundSynth`: deterministic synthesis of every sound, with faded edges and normalized peaks.
+- `SoundSynth`: deterministic synthesis of every sound, with faded edges and normalized peaks. Grain sounds (texture sound) are voiced per material: a brush of noise for linen, a padded thump for corduroy, a bright speck for sand, two resonant modes for wood, gritty bursts for gravel, inharmonic partials for knurl. Each grain plays at a level set by its strongest pulse.
+- `ActiveFeedback`: which services should run for the current settings (touch stream, click, key and grain sounds), so nothing runs that can't be felt or heard.
 - `Settings`: forgiving decoding (defaults for missing keys, a fallback for unknown values, clamped numbers).
 
 ### App
 
 - `AppModel` owns the services and starts or stops them from the settings: the touch stream only runs while an input is on, and the audio engine only while a sound option is on.
+- With texture sound on, the pipeline reports each grain it plays; the sound hops to the main actor and plays on its own pool of four voices, so a fast swipe never cuts a click sound short.
 - While any feedback runs, a `latencyCritical` activity keeps App Nap from throttling the app, so grains and sounds stay attached to the finger.
 - Trackpads are found again on wake, when IOKit reports an `AppleMultitouchDevice` appearing or disappearing (a Magic Trackpad that connects after login), and whenever the panel opens. The hardware is only rebuilt when the list changed.
 - The C bridge guards its stream state with a read-write lock. Start and stop take the write side; the frame callback only tries the read side and drops the frame if it can't get it, because stopping a device may wait for the framework thread. Once stop returns, the old handler and context are never used again, and `TouchStream` releases the pipeline reference it gave the bridge.

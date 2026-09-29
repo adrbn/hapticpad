@@ -209,6 +209,15 @@ private struct SoundSection: View {
             HStack(spacing: 14) {
                 Toggle("Clicks", isOn: model.binding(\.clickSoundEnabled))
                 Toggle("Keyboard", isOn: model.binding(\.keyboardSoundEnabled))
+                Toggle("Texture", isOn: Binding(
+                    get: { model.settings.textureSoundEnabled },
+                    set: { enabled in
+                        model.update(\.textureSoundEnabled, to: enabled)
+                        if enabled { model.previewMaterial() }
+                    }
+                ))
+                .help("A quiet sound for each grain, so you hear the material as you feel it")
+                .disabled(!model.hapticsReady)
             }
             .toggleStyle(.checkbox)
             if model.keyboardNeedsPermission {

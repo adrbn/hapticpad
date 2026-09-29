@@ -109,12 +109,12 @@ public enum SoundSynth {
 
     // MARK: - Building blocks
 
-    private static func timeline(duration: Double, sampleRate: Double) -> [Double] {
+    static func timeline(duration: Double, sampleRate: Double) -> [Double] {
         (0..<max(Int(duration * sampleRate), 2)).map { Double($0) / sampleRate }
     }
 
     /// A sine whose frequency changes over time, integrated so the phase stays continuous.
-    private static func integratedSine(times: [Double], sampleRate: Double, frequency: (Double) -> Double) -> [Double] {
+    static func integratedSine(times: [Double], sampleRate: Double, frequency: (Double) -> Double) -> [Double] {
         var phase = 0.0
         return times.map { t in
             let value = sin(phase)
@@ -123,17 +123,17 @@ public enum SoundSynth {
         }
     }
 
-    private static func delayedTone(frequency: Double, at t: Double, start: Double, decay: Double, level: Double) -> Double {
+    static func delayedTone(frequency: Double, at t: Double, start: Double, decay: Double, level: Double) -> Double {
         guard t >= start else { return 0 }
         let local = t - start
         return level * sin(2 * .pi * frequency * local) * exp(-local / decay)
     }
 
-    private static func delayedEnvelope(at t: Double, start: Double, decay: Double) -> Double {
+    static func delayedEnvelope(at t: Double, start: Double, decay: Double) -> Double {
         t >= start ? exp(-(t - start) / decay) : 0
     }
 
-    private static func noise(count: Int, seed: UInt64) -> [Double] {
+    static func noise(count: Int, seed: UInt64) -> [Double] {
         var generator = SeededRandom(seed: seed)
         return (0..<count).map { _ in
             let (next, value) = generator.nextSigned()
@@ -142,7 +142,7 @@ public enum SoundSynth {
         }
     }
 
-    private static func lowPass(_ input: [Double], amount: Double) -> [Double] {
+    static func lowPass(_ input: [Double], amount: Double) -> [Double] {
         var state = 0.0
         return input.map { sample in
             state += amount * (sample - state)
@@ -151,7 +151,7 @@ public enum SoundSynth {
     }
 
     /// Fades both ends to silence and normalizes the peak to `gain`.
-    private static func finish(_ samples: [Double], gain: Double, sampleRate: Double) -> [Float] {
+    static func finish(_ samples: [Double], gain: Double, sampleRate: Double) -> [Float] {
         let count = samples.count
         let fadeIn = max(Int(fadeInSeconds * sampleRate), 1)
         let fadeOut = max(Int(fadeOutSeconds * sampleRate), 1)

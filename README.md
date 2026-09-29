@@ -28,7 +28,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/hero-dark.png">
-    <img src="docs/assets/hero-light.png" width="428" alt="The Textur panel under its menu bar icon: six materials, strength, grain, and sound options">
+    <img src="docs/assets/hero-light.png" width="428" alt="The Textur panel under its menu bar icon: six materials, strength, grain, and sound options, including texture sound">
   </picture>
 </p>
 
@@ -46,7 +46,7 @@
 - 🧵 **Six materials that feel different.** Each one has its own grain spacing, irregularity and direction: corduroy ridges only show up when you move sideways, wood has the odd knot, gravel is sparse and uneven.
 - 📏 **It follows your finger, not the pointer.** Grains are placed by how far your finger actually travels on the glass, in millimetres, so the texture stays put whatever your tracking speed.
 - 🎚️ **Two controls, that's it.** Strength for how hard each grain hits, Grain for how far apart they sit. Pointer, scroll and tap each have their own switch.
-- 🔊 **Optional sounds.** Soft synthesized clicks and key sounds in four profiles: Kalimba, Muted, Mechanical and Droplet. Off until you turn them on.
+- 🔊 **Optional sounds.** Hear the texture too: each material has its own quiet grain sound, so wood knocks and gravel crunches under your finger. Plus soft click and key sounds in four profiles: Kalimba, Muted, Mechanical and Droplet. All off until you turn them on.
 - 🔒 **Nothing leaves your Mac.** No account, no network access, no telemetry. Textur has no network code at all.
 - 💸 **Free, with no paid tier.** Every material and every sound. About 2 MB, signed and notarized, and the code is open source (MIT).
 
@@ -81,6 +81,8 @@
 | **Scroll** | The same material under two fingers, with wider grains so fast scrolls don't blur |
 | **Tap** | A light tick each time a finger lands, so taps can be felt |
 
+Turn on the **Texture** sound to hear the material as well: a short, quiet sound for every grain, voiced after the material.
+
 ## FAQ
 
 <details>
@@ -96,7 +98,7 @@ It's tested on Apple silicon. The download is a universal build, so it should ru
 
 1. Keep a finger on the glass. The trackpad can only be felt while it's touched, so a preview played with no finger down goes unnoticed.
 2. Check the status line at the top of the panel. It says when no Force Touch trackpad was found.
-3. Try **Strong** and a coarser **Grain**. Some materials, like Linen and Sand, are subtle by design.
+3. Set **Strength** to Strong (the default) and try a coarser **Grain**. Some materials, like Linen and Sand, are subtle by design. Turning on the **Texture** sound helps too: you hear each grain as it plays.
 4. Still nothing? Run `/Applications/Textur.app/Contents/MacOS/Textur --diagnose` in Terminal and paste the output in [an issue](https://github.com/adrbn/textur/issues/new).
 </details>
 

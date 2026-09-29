@@ -21,6 +21,8 @@ final class FeedbackPipeline: @unchecked Sendable {
 
     private let queue = DispatchQueue(label: "textur.pipeline", qos: .userInteractive)
     private let actuators: HapticActuators
+    /// Called on the pipeline queue for each grain played while texture sound is on.
+    private let onGrain: @Sendable (PulseStrength) -> Void
     private var settings = Settings.default
     private var surfaces: [UInt64: SurfaceSize] = [:]
     private var channels: [UInt64: DeviceChannel] = [:]
@@ -32,8 +34,9 @@ final class FeedbackPipeline: @unchecked Sendable {
         let scroll: TextureEngine
     }
 
-    init(actuators: HapticActuators) {
+    init(actuators: HapticActuators, onGrain: @escaping @Sendable (PulseStrength) -> Void = { _ in }) {
         self.actuators = actuators
+        self.onGrain = onGrain
     }
 
     func update(settings newSettings: Settings) {
@@ -79,11 +82,11 @@ final class FeedbackPipeline: @unchecked Sendable {
             case let .pointer(delta, time):
                 let (next, pulses) = pointer.advance(by: delta, at: time)
                 pointer = next
-                if settings.pointerEnabled { actuators.play(pulses, on: deviceID) }
+                if settings.pointerEnabled { play(grain: pulses, on: deviceID) }
             case let .scroll(delta, time):
                 let (next, pulses) = scroll.advance(by: delta, at: time)
                 scroll = next
-                if settings.scrollEnabled { actuators.play(pulses, on: deviceID) }
+                if settings.scrollEnabled { play(grain: pulses, on: deviceID) }
             case .touchDown:
                 if settings.tapEnabled {
                     actuators.play(MaterialCatalog.material(for: settings.material).tapGrain(strength: settings.strength), on: deviceID)
@@ -96,6 +99,13 @@ final class FeedbackPipeline: @unchecked Sendable {
             pointer: lifted ? pointer.reset() : pointer,
             scroll: lifted ? scroll.reset() : scroll
         )
+    }
+
+    private func play(grain pulses: [Pulse], on deviceID: UInt64) {
+        actuators.play(pulses, on: deviceID)
+        if settings.textureSoundEnabled, let peak = pulses.peakStrength {
+            onGrain(peak)
+        }
     }
 
     private func makeChannel(deviceID: UInt64) -> DeviceChannel {

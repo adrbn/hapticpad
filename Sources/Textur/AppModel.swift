@@ -31,7 +31,11 @@ final class AppModel {
     init(store: SettingsStore = SettingsStore()) {
         self.store = store
         settings = store.load()
-        pipeline = FeedbackPipeline(actuators: actuators)
+        pipeline = FeedbackPipeline(actuators: actuators) { [sound] strength in
+            DispatchQueue.main.async {
+                MainActor.assumeIsolated { sound.playGrain(strength) }
+            }
+        }
         touchStream = TouchStream(pipeline: pipeline)
         scanTrackpads()
         apply(settings)
@@ -61,10 +65,15 @@ final class AppModel {
         previewMaterial()
     }
 
-    /// Plays a short phrase of the current material. Felt only while a finger rests on the trackpad.
+    /// Plays a short phrase of the current material. Felt only while a finger rests on the trackpad,
+    /// and heard too when texture sound is on.
     func previewMaterial() {
         guard hapticsReady else { return }
-        actuators.play(material.preview(strength: settings.strength), on: trackpads)
+        let grains = material.previewGrains(strength: settings.strength)
+        actuators.play(grains.flatMap { $0 }, on: trackpads)
+        if ActiveFeedback(settings: settings, hapticsReady: hapticsReady).grainSounds {
+            sound.playGrains(grains)
+        }
     }
 
     func previewSound() {
@@ -120,27 +129,25 @@ final class AppModel {
     private func apply(_ settings: Settings) {
         pipeline.update(settings: settings)
 
-        let needsTouches = settings.isEnabled && hapticsReady
-            && (settings.pointerEnabled || settings.scrollEnabled || settings.tapEnabled)
-        if needsTouches, !touchStream.isRunning {
+        let active = ActiveFeedback(settings: settings, hapticsReady: hapticsReady)
+        if active.touches, !touchStream.isRunning {
             touchStream.start()
-        } else if !needsTouches, touchStream.isRunning {
+        } else if !active.touches, touchStream.isRunning {
             touchStream.stop()
         }
 
-        let clicksOn = settings.isEnabled && settings.clickSoundEnabled
-        let keysOn = settings.isEnabled && settings.keyboardSoundEnabled
         sound.load(profile: settings.soundProfile)
+        sound.load(material: settings.material)
         sound.volume = settings.volume
-        sound.setActive(clicksOn || keysOn)
-        latency.setActive(needsTouches || clicksOn || keysOn)
+        sound.setActive(active.audio)
+        latency.setActive(active.any)
 
-        if clicksOn {
+        if active.clickSounds {
             clicks.start { [weak self] in self?.sound.play(.click) }
         } else {
             clicks.stop()
         }
-        if keysOn {
+        if active.keySounds {
             startKeyboard(prompt: true)
         } else {
             keys.stop()

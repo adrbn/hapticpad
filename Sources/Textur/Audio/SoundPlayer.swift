@@ -2,14 +2,16 @@ import AVFoundation
 import TexturCore
 import os
 
-/// Plays synthesized click and key sounds with low latency.
+/// Plays synthesized click, key and grain sounds with low latency.
 ///
-/// Buffers for the current profile are rendered once, and a small pool of
-/// player nodes lets fast typing overlap without cutting sounds off.
+/// Buffers for the current profile and material are rendered once, and small
+/// pools of player nodes let fast typing overlap without cutting sounds off.
+/// Grains have their own pool, so a fast swipe never cuts a click short.
 @MainActor
 final class SoundPlayer {
     private static let sampleRate = 48_000.0
     private static let voices = 8
+    private static let grainVoices = 4
 
     private let engine = AVAudioEngine()
     private let format = AVAudioFormat(standardFormatWithSampleRate: SoundPlayer.sampleRate, channels: 1)
@@ -20,13 +22,19 @@ final class SoundPlayer {
     private var buffers: [SoundTrigger: [AVAudioPCMBuffer]] = [:]
     private var melody = MelodyWalker(noteCount: SoundSynth.variantCount(profile: .kalimba, trigger: .click), seed: 1)
     private var lastVariant: [SoundTrigger: Int] = [:]
+    private var grainNodes: [AVAudioPlayerNode] = []
+    private var nextGrainVoice = 0
+    private var grainMaterial: MaterialID?
+    private var grainBuffers: [AVAudioPCMBuffer] = []
+    private var lastGrainVariant: Int?
     private var configurationObserver: NSObjectProtocol?
     private var isActive = false
 
     init() {
         guard let format else { return }
         nodes = (0..<Self.voices).map { _ in AVAudioPlayerNode() }
-        for node in nodes {
+        grainNodes = (0..<Self.grainVoices).map { _ in AVAudioPlayerNode() }
+        for node in nodes + grainNodes {
             engine.attach(node)
             engine.connect(node, to: engine.mainMixerNode, format: format)
         }
@@ -60,6 +68,16 @@ final class SoundPlayer {
         melody = MelodyWalker(noteCount: SoundSynth.variantCount(profile: newProfile, trigger: .click), seed: UInt64.random(in: 1...UInt64.max))
     }
 
+    /// Renders the material's grain sounds if it changed.
+    func load(material newMaterial: MaterialID) {
+        guard newMaterial != grainMaterial, let format else { return }
+        grainMaterial = newMaterial
+        lastGrainVariant = nil
+        grainBuffers = (0..<SoundSynth.grainVariantCount).compactMap { variant in
+            Self.buffer(from: SoundSynth.renderGrain(material: newMaterial, variant: variant, sampleRate: Self.sampleRate), format: format)
+        }
+    }
+
     /// Starts or stops the audio engine; it only runs while a sound option is on.
     func setActive(_ active: Bool) {
         isActive = active
@@ -70,7 +88,7 @@ final class SoundPlayer {
                 log.error("Audio engine failed to start: \(error.localizedDescription, privacy: .public)")
             }
         } else if !active, engine.isRunning {
-            nodes.forEach { $0.stop() }
+            (nodes + grainNodes).forEach { $0.stop() }
             engine.stop()
         }
     }
@@ -83,6 +101,32 @@ final class SoundPlayer {
         node.scheduleBuffer(candidates[variant], at: nil, options: .interrupts)
         if !node.isPlaying {
             node.play()
+        }
+    }
+
+    func playGrain(_ strength: PulseStrength) {
+        guard engine.isRunning, !grainBuffers.isEmpty else { return }
+        // Random, but never the same variant twice in a row, so a steady swipe doesn't buzz.
+        let options = grainBuffers.indices.filter { $0 != lastGrainVariant || grainBuffers.count == 1 }
+        let variant = options.randomElement() ?? 0
+        lastGrainVariant = variant
+        let node = grainNodes[nextGrainVoice]
+        nextGrainVoice = (nextGrainVoice + 1) % grainNodes.count
+        node.volume = Float(SoundSynth.grainLevel(for: strength))
+        node.scheduleBuffer(grainBuffers[variant], at: nil, options: .interrupts)
+        if !node.isPlaying {
+            node.play()
+        }
+    }
+
+    /// Plays one grain sound per grain of a phrase, at each grain's delay.
+    func playGrains(_ grains: [[Pulse]]) {
+        for grain in grains {
+            guard let strength = grain.peakStrength else { continue }
+            let delay = grain.map(\.delay).min() ?? 0
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                MainActor.assumeIsolated { self?.playGrain(strength) }
+            }
         }
     }
 
