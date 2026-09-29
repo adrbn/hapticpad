@@ -86,7 +86,9 @@
 <details>
 <summary><b>Which Macs does it work with?</b></summary>
 
-Any Mac with a Force Touch trackpad running macOS 14 Sonoma or later, on Apple silicon or Intel: MacBook Pro (2015 and later), MacBook Air (2018 and later), the 12-inch MacBook, and the Magic Trackpad 2 or later. The sounds work on any Mac, with or without a Force Touch trackpad.
+Any Mac with a Force Touch trackpad running macOS 14 Sonoma or later: MacBook Pro (2015 and later), MacBook Air (2018 and later), the 12-inch MacBook, and the Magic Trackpad 2 or later. The sounds work on any Mac, with or without a Force Touch trackpad.
+
+It's tested on Apple silicon. The download is a universal build, so it should run on Intel Macs too, but that hasn't been tested yet: if you try it on one, [tell me how it went](https://github.com/adrbn/hapticpad/issues/new).
 </details>
 
 <details>
