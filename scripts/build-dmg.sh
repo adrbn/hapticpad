@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds build/HapticPad.dmg: the app next to an Applications link, ready to drag.
+# Builds build/Textur.dmg: the app next to an Applications link, ready to drag.
 #
 #   NOTARY_PROFILE=<profile> ./scripts/build-dmg.sh
 #
@@ -10,8 +10,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-APP="build/HapticPad.app"
-DMG="build/HapticPad.dmg"
+APP="build/Textur.app"
+DMG="build/Textur.dmg"
 STAGE="build/dmg"
 NOTARY_PROFILE="${NOTARY_PROFILE:-}"
 
@@ -29,7 +29,7 @@ notarize() {
 # once it is dragged to Applications, and Gatekeeper then has to ask Apple online.
 if [ -n "$NOTARY_PROFILE" ]; then
     [ -n "$IDENTITY" ] || die "notarization needs a Developer ID signature"
-    ZIP="build/HapticPad-notarize.zip"
+    ZIP="build/Textur-notarize.zip"
     rm -f "$ZIP"
     ditto -c -k --keepParent "$APP" "$ZIP"
     notarize "$ZIP"
@@ -43,7 +43,7 @@ rm -rf "$STAGE" "$DMG"
 mkdir -p "$STAGE"
 cp -R "$APP" "$STAGE/"
 ln -s /Applications "$STAGE/Applications"
-hdiutil create -volname "HapticPad" -srcfolder "$STAGE" -ov -format UDZO "$DMG" >/dev/null
+hdiutil create -volname "Textur" -srcfolder "$STAGE" -ov -format UDZO "$DMG" >/dev/null
 rm -rf "$STAGE"
 
 # The disk image needs its own signature, applied before it is notarized.

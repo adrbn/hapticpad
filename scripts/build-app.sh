@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds build/HapticPad.app, universal (Apple silicon and Intel).
+# Builds build/Textur.app, universal (Apple silicon and Intel).
 #
 #   ./scripts/build-app.sh             build the app
 #   ./scripts/build-app.sh --install   build it and copy it to /Applications
@@ -14,7 +14,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-APP="build/HapticPad.app"
+APP="build/Textur.app"
 ARCHS=(--arch arm64 --arch x86_64)
 
 if [ -z "${SIGN_IDENTITY+set}" ]; then
@@ -35,7 +35,7 @@ BIN_DIR="$(swift build -c release "${ARCHS[@]}" --show-bin-path)"
 echo "==> Assembling ${APP}…"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
-cp "$BIN_DIR/HapticPad" "$APP/Contents/MacOS/HapticPad"
+cp "$BIN_DIR/Textur" "$APP/Contents/MacOS/Textur"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 
@@ -51,8 +51,8 @@ codesign --verify --strict "$APP"
 echo "==> Built $APP"
 
 if [ "${1:-}" = "--install" ]; then
-    pkill -x HapticPad 2>/dev/null || true
-    rm -rf /Applications/HapticPad.app
+    pkill -x Textur 2>/dev/null || true
+    rm -rf /Applications/Textur.app
     cp -R "$APP" /Applications/
-    echo "==> Installed /Applications/HapticPad.app"
+    echo "==> Installed /Applications/Textur.app"
 fi

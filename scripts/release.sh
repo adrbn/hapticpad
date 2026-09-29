@@ -15,7 +15,7 @@ set -euo pipefail
 VERSION="${1:-}"
 NOTARY_PROFILE="${NOTARY_PROFILE:-notary}"
 PLIST="Resources/Info.plist"
-DMG="build/HapticPad.dmg"
+DMG="build/Textur.dmg"
 
 die() { echo "error: $*" >&2; exit 1; }
 
@@ -65,7 +65,7 @@ if [ -n "${NOTES_FILE:-}" ]; then
 else
     NOTES_ARGS=(--generate-notes)
 fi
-RELEASE_ARGS=("v$VERSION" "$DMG" --title "HapticPad $VERSION" "${NOTES_ARGS[@]}")
+RELEASE_ARGS=("v$VERSION" "$DMG" --title "Textur $VERSION" "${NOTES_ARGS[@]}")
 # The tag is already pushed, so a failure here only needs this one command re-run.
 gh release create "${RELEASE_ARGS[@]}" \
     || die "v$VERSION is tagged and pushed but not published. Finish with: gh release create $(printf '%q ' "${RELEASE_ARGS[@]}")"

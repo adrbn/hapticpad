@@ -1,4 +1,4 @@
-# How HapticPad works
+# How Textur works
 
 ## Goal
 
@@ -6,19 +6,19 @@ A free, open-source menu bar app that makes the Force Touch trackpad feel textur
 
 ## Constraints
 
-- `NSHapticFeedbackManager` only offers three patterns and is ignored for menu bar (accessory) apps that are not frontmost, so it cannot drive textures. HapticPad uses Apple's private `MultitouchSupport` framework for both touch input and actuation.
+- `NSHapticFeedbackManager` only offers three patterns and is ignored for menu bar (accessory) apps that are not frontmost, so it cannot drive textures. Textur uses Apple's private `MultitouchSupport` framework for both touch input and actuation.
 - Private symbols are resolved with `dlopen` and `dlsym`. A missing symbol disables haptics instead of crashing, and sounds keep working.
 - The app is not sandboxed (the sandbox blocks the multitouch device and event taps), so it ships outside the Mac App Store, signed with Developer ID and notarized.
 
 ## Waveforms
 
-The trackpad firmware embeds its actuation table (`__TEXT,__tpad_act_plist` in MultitouchSupport). IDs 1, 3 and 5 are silent Gaussian bumps of about 7 ms (amplitude about 16 to 23), IDs 2 and 4 add short tones (about 27 to 35), and ID 6 is the strongest tap (about 37 to 50). HapticPad maps its four pulse strengths to 1, 5, 4 and 6.
+The trackpad firmware embeds its actuation table (`__TEXT,__tpad_act_plist` in MultitouchSupport). IDs 1, 3 and 5 are silent Gaussian bumps of about 7 ms (amplitude about 16 to 23), IDs 2 and 4 add short tones (about 27 to 35), and ID 6 is the strongest tap (about 37 to 50). Textur maps its four pulse strengths to 1, 5, 4 and 6.
 
 ## Architecture
 
 ```
 MultitouchSupport ──frames──▶ CMultitouch (C bridge, dlopen)
-                                   │ HPTouch[] on the framework thread
+                                   │ TXTouch[] on the framework thread
                                    ▼
                           FeedbackPipeline (serial queue)
                  TouchFrame (mm) ─▶ GestureInterpreter ─▶ GestureEvent
@@ -32,7 +32,7 @@ NSEvent monitor (clicks) ─┐
 CGEventTap (keys) ────────┴▶ SoundPlayer (AVAudioEngine, synthesized buffers)
 ```
 
-### HapticPadCore (pure Swift, unit tested)
+### TexturCore (pure Swift, unit tested)
 
 - `GestureInterpreter`: immutable state machine.
   - Movement is only reported while the same set of fingers stays down, which prevents jumps when fingers land or lift.
@@ -54,4 +54,4 @@ CGEventTap (keys) ────────┴▶ SoundPlayer (AVAudioEngine, syn
 ## Testing
 
 - Unit tests cover gestures, textures, materials, settings and sound synthesis (`swift test`).
-- Hardware checks: `HapticPad --diagnose` confirms that each waveform is accepted by the actuator and that touches arrive. The actual feel is judged by hand.
+- Hardware checks: `Textur --diagnose` confirms that each waveform is accepted by the actuator and that touches arrive. The actual feel is judged by hand.

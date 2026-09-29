@@ -8,6 +8,6 @@ cd "$(dirname "$0")/.."
 
 ./scripts/build-app.sh
 # Launched through LaunchServices, so the panel draws as it does when opened.
-open -W -n build/HapticPad.app --args --snapshot "$PWD/docs/assets" -AppleAccentColor 4
+open -W -n build/Textur.app --args --snapshot "$PWD/docs/assets" -AppleAccentColor 4
 sips -s format png Resources/AppIcon.icns --resampleWidth 256 --out docs/assets/icon.png >/dev/null
 echo "==> Updated docs/assets"

@@ -2,10 +2,10 @@
 import PackageDescription
 
 let package = Package(
-    name: "HapticPad",
+    name: "Textur",
     platforms: [.macOS(.v14)],
     products: [
-        .executable(name: "HapticPad", targets: ["HapticPad"]),
+        .executable(name: "Textur", targets: ["Textur"]),
     ],
     targets: [
         // Thin C bridge that loads Apple's private MultitouchSupport framework at runtime.
@@ -14,17 +14,17 @@ let package = Package(
             linkerSettings: [.linkedFramework("CoreFoundation"), .linkedFramework("IOKit")]
         ),
         // Pure logic: gestures, materials, textures, sound synthesis, settings. No AppKit.
-        .target(name: "HapticPadCore"),
+        .target(name: "TexturCore"),
         // The menu bar app.
         .executableTarget(
-            name: "HapticPad",
-            dependencies: ["CMultitouch", "HapticPadCore"],
+            name: "Textur",
+            dependencies: ["CMultitouch", "TexturCore"],
             linkerSettings: [
                 .linkedFramework("AppKit"),
                 .linkedFramework("AVFoundation"),
                 .linkedFramework("ServiceManagement"),
             ]
         ),
-        .testTarget(name: "HapticPadCoreTests", dependencies: ["HapticPadCore"]),
+        .testTarget(name: "TexturCoreTests", dependencies: ["TexturCore"]),
     ]
 )

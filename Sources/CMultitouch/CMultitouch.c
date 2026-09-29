@@ -98,7 +98,7 @@ static void load_api(void) {
                     api.actuatorCreate && api.actuatorOpen && api.actuatorClose && api.actuatorActuate;
 }
 
-bool hp_multitouch_available(void) {
+bool tx_multitouch_available(void) {
     pthread_once(&load_once, load_api);
     return api.available;
 }
@@ -113,8 +113,8 @@ static bool device_is_haptic(MTDeviceRef device) {
     return api.isBuiltIn != NULL && api.isBuiltIn(device);
 }
 
-static HPDeviceInfo describe_device(MTDeviceRef device) {
-    HPDeviceInfo info = {0};
+static TXDeviceInfo describe_device(MTDeviceRef device) {
+    TXDeviceInfo info = {0};
     api.getDeviceID(device, &info.deviceID);
     info.builtIn = api.isBuiltIn != NULL && api.isBuiltIn(device);
     int width = 0;
@@ -127,8 +127,8 @@ static HPDeviceInfo describe_device(MTDeviceRef device) {
     return info;
 }
 
-int32_t hp_multitouch_list_devices(HPDeviceInfo *out, int32_t capacity) {
-    if (!hp_multitouch_available()) {
+int32_t tx_multitouch_list_devices(TXDeviceInfo *out, int32_t capacity) {
+    if (!tx_multitouch_available()) {
         return 0;
     }
     CFArrayRef list = api.createList();
@@ -165,7 +165,7 @@ static CFArrayRef running_list = NULL;
 static MTDeviceRef running_devices[kMaxDevices];
 static uint64_t running_ids[kMaxDevices];
 static int32_t running_count = 0;
-static HPFrameHandler frame_handler = NULL;
+static TXFrameHandler frame_handler = NULL;
 static void *frame_context = NULL;
 
 static uint64_t id_for_device(MTDeviceRef device) {
@@ -184,7 +184,7 @@ static void on_contact_frame(MTDeviceRef device, MTTouch *touches, int count, do
         return;
     }
     if (frame_handler != NULL) {
-        HPTouch converted[kMaxTouches];
+        TXTouch converted[kMaxTouches];
         int32_t n = count < 0 ? 0 : (count < kMaxTouches ? count : kMaxTouches);
         for (int32_t i = 0; i < n; i++) {
             converted[i].identifier = touches[i].identifier;
@@ -212,8 +212,8 @@ static void stop_locked(void) {
     frame_context = NULL;
 }
 
-int32_t hp_multitouch_start(HPFrameHandler handler, void *context) {
-    if (!hp_multitouch_available() || handler == NULL) {
+int32_t tx_multitouch_start(TXFrameHandler handler, void *context) {
+    if (!tx_multitouch_available() || handler == NULL) {
         return 0;
     }
     pthread_rwlock_wrlock(&state_lock);
@@ -243,8 +243,8 @@ int32_t hp_multitouch_start(HPFrameHandler handler, void *context) {
     return started;
 }
 
-void hp_multitouch_stop(void) {
-    if (!hp_multitouch_available()) {
+void tx_multitouch_stop(void) {
+    if (!tx_multitouch_available()) {
         return;
     }
     pthread_rwlock_wrlock(&state_lock);
@@ -254,8 +254,8 @@ void hp_multitouch_stop(void) {
 
 // MARK: - Actuator
 
-void *hp_actuator_open(uint64_t deviceID) {
-    if (!hp_multitouch_available() || deviceID == 0) {
+void *tx_actuator_open(uint64_t deviceID) {
+    if (!tx_multitouch_available() || deviceID == 0) {
         return NULL;
     }
     CFTypeRef actuator = api.actuatorCreate(deviceID);
@@ -269,15 +269,15 @@ void *hp_actuator_open(uint64_t deviceID) {
     return (void *)actuator;
 }
 
-bool hp_actuator_actuate(void *actuator, int32_t actuationID, float unknown2, float unknown3) {
-    if (actuator == NULL || !hp_multitouch_available()) {
+bool tx_actuator_actuate(void *actuator, int32_t actuationID, float unknown2, float unknown3) {
+    if (actuator == NULL || !tx_multitouch_available()) {
         return false;
     }
     return api.actuatorActuate((CFTypeRef)actuator, actuationID, 0, unknown2, unknown3) == kIOReturnSuccess;
 }
 
-void hp_actuator_close(void *actuator) {
-    if (actuator == NULL || !hp_multitouch_available()) {
+void tx_actuator_close(void *actuator) {
+    if (actuator == NULL || !tx_multitouch_available()) {
         return;
     }
     api.actuatorClose((CFTypeRef)actuator);
